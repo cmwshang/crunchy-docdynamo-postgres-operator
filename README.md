@@ -1,0 +1,1 @@
+# crunchy-docdynamo-postgres-operator
