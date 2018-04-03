@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE doc SYSTEM "manifest.dtd">
+<doc>
+    <!-- System-wide variables  -->
+    <variable-list>
+        <variable key="dash">-</variable>
+        <variable key="project-url-root">/</variable>
+        <variable key="organization">Crunchy Data Solutions, Inc.</variable>
+        <variable key="project">Crunchy Postgres Operator</variable>
+
+        <!-- Logo locations -->
+        <variable key="project-logo">logo.svg</variable>
+        <variable key="project-logo-path">{[doc-path]}/resource/</variable>
+        <variable key="logo">{[doc-path]}/output/latex/logo</variable>
+
+        <!-- HTML variables  -->
+        <variable key="prepare-date" eval="y">
+            use Time::Local;
+
+            my ($second, $minute , $hour, $mday, $month, $year) = localtime();
+            $year += 1900;
+
+            my @stryMonth = ('January', 'February', 'March', 'April', 'May', 'June',
+                             'July', 'August', 'September', 'October', 'November', 'December');
+
+            $stryMonth[$month] . ' ' . $mday . ', ' . $year;
+        </variable>
+        <variable key="html-logo">&lt;img src=&quot;{[project-logo]}&quot;&gt;</variable>
+
+        <!-- PDF variables -->
+        <variable key="pdf-install-subtitle">Installation Guide</variable>
+        <variable key="pdf-install-version">DRAFT</variable>
+        <variable key="pdf-logo">cds-logo.eps</variable>
+
+    </variable-list>
+
+    <source-list>
+        <source key="commands"/>
+        <source key="configuration"/>
+    </source-list>
+
+    <render-list>
+        <render type="html">
+            <footer-center>Prepared by Crunchy Data Solutions, Inc. &amp;mdash; {[prepare-date]}</footer-center>
+            <render-source key="configuration" menu="Configuration"/>
+            <render-source key="commands" menu="Commands"/>
+        </render>
+
+        <render type="pdf" file="Install">
+            <title1>{[project]}</title1>
+            <title2>{[pdf-install-subtitle]}</title2>
+            <title3>{[pdf-install-version]}</title3>
+            <footer-left>{[project]} {[pdf-install-subtitle]}\\{[pdf-install-version]}</footer-left>
+            <footer-center>\ \\-\ \thepage\ -</footer-center>
+            <footer-right>{[organization]}\\\today</footer-right>
+            <render-source key="configuration"/>
+        </render>
+
+        <render type="markdown">
+            <render-source key="commands" file="COMMANDS.md"/>
+            <render-source key="configuration" file="CONFIGURATION.md"/>
+        </render>
+    </render-list>
+</doc>
