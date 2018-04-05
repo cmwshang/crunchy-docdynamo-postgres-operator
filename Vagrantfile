@@ -29,7 +29,8 @@ Vagrant.configure(2) do |config|
         git clone https://github.com/cmwshang/docdynamo.git /docdynamo
 
         echo 'Get Crunchy Postgres Operator' && date
-        git clone https://github.com/CrunchyData/postgres-operator.git /postgres-operator
+        # git clone https://github.com/CrunchyData/postgres-operator.git /postgres-operator
+        git clone https://github.com/cmwshang/postgres-operator.git /postgres-operator
 
         echo 'Build End' && date
     SHELL

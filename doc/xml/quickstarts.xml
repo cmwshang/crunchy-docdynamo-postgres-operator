@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE doc SYSTEM "doc.dtd">
+<doc title="PostgreSQL Operator Quickstarts">
+<description>PostgreSQL Operator Quickstarts</description>
+<section id="_overview">
+<title>Overview</title>
+<p>There are currently <b>quickstart</b> scripts that seek to automate
+the deployment to popular Kube environments:
+ * quickstart-for-gke.sh
+ * quickstart-for-ocp.sh</p>
+<p>The <b>quickstart-for-gke</b> script will deploy the operator to
+a GKE Kube cluster.</p>
+<p>The <b>quickstart-for-ocp</b> script will deploy the operator to
+an Openshift Container Platform cluster.</p>
+<p>Both scripts assume you have a StorageClass defined for persistence.</p>
+<p>Pre-compiled versions of the Operator <b>pgo</b> client are provided for the x86_64, Mac OSX, and Windows hosts.</p>
+</section>
+<section id="_quickstart">
+<title>Quickstart</title>
+<section id="_gke_pks">
+<title>GKE/PKS</title>
+<p>The <b>quickstart-for-gke.sh</b> script will allow users to set up the Postgres Operator quickly on GKE including PKS.
+This script is tested on GKE but can be modified for use with other Kubernetes environments as well.</p>
+<p>The script requires a few things in order to work:</p>
+<list>
+<list-item>
+wget utility installed
+</list-item>
+<list-item>
+kubectl utility installed
+</list-item>
+<list-item>
+StorageClass defined
+</list-item>
+</list>
+<p>Executing the script will give you a default Operator deployment
+that assumes <b>dynamic</b> storage and a storage class named <b>standard</b>,
+things that GKE provides.</p>
+<p>The script performs the following:</p>
+<list>
+<list-item>
+downloads the Operator configuration files
+</list-item>
+<list-item>
+sets the $HOME/.pgouser file to default settings
+</list-item>
+<list-item>
+deploys the Operator Deployment
+</list-item>
+<list-item>
+sets your .bashrc to include the Operator environment variables
+</list-item>
+<list-item>
+sets your $HOME/.bash_completion file to be the <b>pgo</b> bash_completion file
+</list-item>
+</list>
+</section>
+<section id="_openshift_container_platform">
+<title>Openshift Container Platform</title>
+<p>A similar script for installing the operator on OCP is
+offered with similar features as the GKE script.  This script is
+tested on OCP 3.7 with a StorageClass defined.</p>
+</section>
+</section>
+</doc>

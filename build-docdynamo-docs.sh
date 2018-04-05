@@ -19,7 +19,7 @@ OPERATION="$2"
 if [[ "$#" -le 1 ]]; then
   echo "Usage:"
   echo "   $0 <name> <operation>"
-  echo "   - name: all | commands | configuration"
+  echo "   - name: all | commands | configuration | design | install | quickstarts"
   echo "   - operation: create | delete"
   exit
 fi
@@ -36,7 +36,7 @@ function create {
 
 
 if [[ ${NAME?} == "all" ]]; then
-  docs="commands configuration"
+  docs="commands configuration design install quickstarts"
 else
   docs="${NAME}"
 fi
@@ -48,3 +48,6 @@ for doc in $docs; do
       ;;
   esac
 done
+
+# Copy images
+ cp /postgres-operator/docs/*.png /crunchy-docdynamo-postgres-operator/doc/output/image

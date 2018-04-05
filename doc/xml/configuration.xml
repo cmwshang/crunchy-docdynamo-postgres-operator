@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE doc SYSTEM "doc.dtd">
+<doc title="PostgreSQL Operator Configuration">
+<description>PostgreSQL Operator Configuration</description>
+<section id="_overview">
+<title>Overview</title>
+<p>This document describes how to configure the operator beyond the default configurations and what the configuration settings mean.</p>
+</section>
+<section id="_openshift_container_platform">
+<title>Openshift Container Platform</title>
+<p>To run the Operator on Openshift Container Platform note the following:</p>
+<list>
+<list-item>
+Openshift Container Platform 3.7 or greater is required since the Operator is based on Custom Resource Definitions which were first supported in OCP starting with version 3.7
+</list-item>
+<list-item>
+the OC_CMD environment variable should be set to <b>oc</b> when operating in an Openshift environment
+</list-item>
+</list>
+</section>
+<section id="_security_configuration">
+<title>Security Configuration</title>
+<section id="_kube_rbac">
+<title>Kube RBAC</title>
+<p>The <b>apiserver</b> and <b>postgres-operator</b> containers access
+Kube resources and need priviledges for interacting with Kube.
+The <b>rbac.yaml</b> file includes a set of roles and bindings
+that allow the operator to work.  These are fine grained
+controls that you can adjust to your local Kube cluster depending
+on your security requirements</p>
+<p>The <b>rbac.yaml</b> file gets executed when you deploy the operator
+to your Kube cluster.</p>
+<p>Permissions are granted to the Operator by means of a
+Service Account called <b>postgres-operator</b>.  That service
+account is added to the Operator deployment.</p>
+<p>If you are not using the <b>demo</b> namespace, you will edit the following:</p>
+<list>
+<list-item>
+$COROOT/deploy/service-account.yaml
+</list-item>
+</list>
+<p>See <link url="https://kubernetes.io/docs/admin/authorization/rbac/">here</link> for more
+details on how to enable RBAC roles and modify the scope of the permissions
+to suit your needs.</p>
+</section>
+<section id="_basic_authentication">
+<title>Basic Authentication</title>
+<p>Basic Authentication is required by the <b>apiserver</b>.  You will configure the <b>pgo</b> client to specify a basic authentication username and password by creating a file in the user's home directory named <b>.pgouser</b> that looks similar to this, containing only a single line:</p>
+<code-block>username:password</code-block>
+<p>This example specifies a username of <b>username</b> and a password of <b>password</b>.  These values will be read by the <b>pgo</b> client and passed to the <b>apiserver</b> on each REST API call.</p>
+<p>For the <b>apiserver</b>, a list of usernames and passwords is
+specified in the <b>apiserver-conf-secret</b> Secret.  The values specified
+in a deployment are found in the following location:</p>
+<code-block>$COROOT/conf/apiserver/pgouser</code-block>
+<p>The sample configuration for <b>pgouser</b> is as follows:</p>
+<code-block>username:password
+testuser:testpass</code-block>
+<p>Modify these values to be unique to your environment.</p>
+<p>If the username and password passed by clients to the <b>apiserver</b> do
+not match, the REST call will fail and a log message will be produced
+in the <b>apiserver</b> container log.  The client will receive a 401 http
+status code if they are not able to authenticate.</p>
+<p>If the <b>pgouser</b> file is not found in the home directory of the <b>pgo</b> user
+then the next searched location is <b>/etc/pgo/pgouser</b>, and if not found
+there then lastly the <b>PGOUSER</b> environment variable is searched for
+a path to the basic authentication file.</p>
+<p>You can turn off Basic Authentication entirely if you set
+the BasicAuth setting in the pgo.yaml configuration file to false.</p>
+</section>
+<section id="_configure_tls">
+<title>Configure TLS</title>
+<p>TLS is used to secure communications to the <b>apiserver</b>.  Sample keys/certs used by TLS are found here:</p>
+<code-block>$COROOT/conf/apiserver/server.crt
+$COROOT/conf/apiserver/server.key</code-block>
+<p>If you want to generate your own keys, you can use the script found in:</p>
+<code-block>$COROOT/bin/make-certs.sh</code-block>
+<p>The <b>pgo</b> client is required to use keys to connect to the <b>apiserver</b>.  Specify the keys to <b>pgo</b> by setting the following environment variables:</p>
+<code-block>export PGO_CA_CERT=$COROOT/conf/apiserver/server.crt
+export PGO_CLIENT_CERT=$COROOT/conf/apiserver/server.crt
+export PGO_CLIENT_KEY=$COROOT/conf/apiserver/server.key</code-block>
+<p>The sample server keys are used as the client keys, adjust to suit your requirements.</p>
+<p>For the <b>apiserver</b> TLS configuration, the keys are included in the <b>apiserver-conf-secret</b> Secret when the <b>apiserver</b> is deployed.  See the $COROOT/deploy/deploy.sh script which is where the secret is created.</p>
+<p>The <b>apiserver</b> listens on port 8443 (e.g. <link url="https://postgres-operator:8443">https://postgres-operator:8443</link>).</p>
+<p>You can set <b>InsecureSkipVerify</b> to true if you set the NO_TLS_VERIFY
+environment variable in the <b>deployment.json</b> file to <b>true</b>.  By default
+this value is set to <b>false</b> if you do not specify a value.</p>
+</section>
+<section id="_pgo_rbac">
+<title>pgo RBAC</title>
+<p>The <b>pgo</b> command line utility talks to the <b>apiserver</b> REST API instead of the Kube API.  Therefore it requires its own RBAC configuration.</p>
+<p>Starting in Release 2.6, the <b>/conf/apiserver/pgorole</b> is used to define some sample pgo roles, <b>pgadmin</b> and <b>pgoreader</b>.</p>
+<p>These roles are meant as samples that you can configure to suite your own security requirements.  The <b>pgadmin</b> role grants a user authorization to all pgo commands.  The <b>pgoreader</b> only grants access to pgo commands that display information such as <b>pgo show cluster</b>.</p>
+<p>The <b>pgorole</b> file is read at start up time when the operator is deployed to your Kube cluster.</p>
+<p>Also, the <b>pguser</b> file now includes the role that is assigned to a specific user as follows:</p>
+<code-block>username:password:pgoadmin
+testuser:testpass:pgoadmin
+readonlyuser:testpass:pgoreader</code-block>
+<p>The following list shows the current <b>pgo</b> permissions:
+.pgo Permissions</p>
+<table>
+
+<table-header>
+<table-column align="left">Permission </table-column>
+<table-column align="left"> Description</table-column>
+</table-header>
+
+<table-data>
+<table-row>
+<table-cell>ShowCluster</table-cell>
+<table-cell>allow <b>pgo show cluster</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>CreateCluster</table-cell>
+<table-cell>allow <b>pgo create cluster</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>TestCluster</table-cell>
+<table-cell>allow <b>pgo test mycluster</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>ShowBackup</table-cell>
+<table-cell>allow <b>pgo show backup</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>CreateBackup</table-cell>
+<table-cell>allow <b>pgo backup mycluster</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>DeleteBackup</table-cell>
+<table-cell>allow <b>pgo delete backup mycluster</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>Label</table-cell>
+<table-cell>allow <b>pgo label</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>Load</table-cell>
+<table-cell>allow <b>pgo load</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>CreatePolicy</table-cell>
+<table-cell>allow <b>pgo create policy</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>DeletePolicy</table-cell>
+<table-cell>allow <b>pgo delete policy</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>ShowPolicy</table-cell>
+<table-cell>allow <b>pgo show policy</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>ApplyPolicy</table-cell>
+<table-cell>allow <b>pgo apply policy</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>ShowPVC</table-cell>
+<table-cell>allow <b>pgo show pvc</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>CreateUpgrade</table-cell>
+<table-cell>allow <b>pgo upgrade</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>ShowUpgrade</table-cell>
+<table-cell>allow <b>pgo show upgrade</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>DeleteUpgrade</table-cell>
+<table-cell>allow <b>pgo delete upgrade</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>CreateUser</table-cell>
+<table-cell>allow <b>pgo create user</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>CreateFailover</table-cell>
+<table-cell>allow <b>pgo failover</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>User</table-cell>
+<table-cell>allow <b>pgo user</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>Version</table-cell>
+<table-cell>allow <b>pgo version</b></table-cell>
+</table-row>
+</table-data>
+</table>
+<p>If you are not authorized for a <b>pgo</b> command the user will
+get back this response:</p>
+<code-block>FATA[0000] Authentication Failed: 40</code-block>
+</section>
+<section id="_b_apiserver_b_configuration">
+<title><b>apiserver</b> Configuration</title>
+<p>The <b>postgres-operator</b> pod includes the <b>apiserver</b> which is a REST API that <b>pgo</b> users communicate with.</p>
+<p>The <b>apiserver</b> uses the following configuration files found in $COROOT/conf/apiserver to determine how the Operator will provision PostgreSQL containers:</p>
+<code-block>$COROOT/conf/apiserver/pgo.yaml
+$COROOT/conf/apiserver/pgo.lspvc-template.json
+$COROOT/conf/apiserver/pgo.load-template.json</code-block>
+<p>Note that the default <b>pgo.yaml</b> file assumes you are going to use <b>HostPath</b> Persistent Volumes for your storage configuration.  Adjust this file for NFS or other storage configurations.</p>
+<p>The version of PostgreSQL container the Operator will deploy is determined by the <b>CCPImageTag</b> setting in the <b>$COROOT/conf/apiserver/pgo.yaml</b> configuration file.  By default, this value is set to the latest release of the Crunchy Container Suite.</p>
+<section id="_b_pgo_yaml_b">
+<title><b>pgo.yaml</b></title>
+<p>The default <b>pgo.yaml</b> configuration file, included in <b>$COROOT/conf/apiserver/pgo.yaml</b>, looks like this:</p>
+<code-block>BasicAuth:  true
+Cluster:
+  CCPImageTag:  centos7-10.3-1.8.2
+  Port:  5432
+  User:  testuser
+  Database:  userdb
+  PasswordAgeDays:  60
+  PasswordLength:  8
+  Strategy:  1
+  Replicas:  0
+PrimaryStorage: storage1
+BackupStorage: storage1
+ReplicaStorage: storage1
+Storage:
+  storage1:
+    AccessMode:  ReadWriteMany
+    Size:  200M
+    StorageType:  create
+  storage2:
+    AccessMode:  ReadWriteMany
+    Size:  333M
+    StorageType:  create
+  storage3:
+    AccessMode:  ReadWriteMany
+    Size:  440M
+    StorageType:  create
+DefaultContainerResource: small
+ContainerResources:
+  small:
+    RequestsMemory:  2Gi
+    RequestsCPU:  0.5
+    LimitsMemory:  2Gi
+    LimitsCPU:  1.0
+  large:
+    RequestsMemory:  8Gi
+    RequestsCPU:  2.0
+    LimitsMemory:  12Gi
+    LimitsCPU:  4.0
+Pgo:
+  Audit:  false
+  Metrics:  false
+  LSPVCTemplate:  /config/pgo.lspvc-template.json
+  CSVLoadTemplate:  /config/pgo.load-template.json
+  COImagePrefix:  crunchydata
+  COImageTag:  centos7-2.6</code-block>
+<p>Values in the pgo configuration file have the following meaning:</p>
+<table>
+<title label="Table 1. ">pgo Configuration File Definitions</title>
+
+<table-header>
+<table-column align="left">Setting </table-column>
+<table-column align="left"> Definition</table-column>
+</table-header>
+
+<table-data>
+<table-row>
+<table-cell>BasicAuth        </table-cell>
+<table-cell>if set to <b>true</b> will enable Basic Authentication</table-cell>
+</table-row>
+<table-row>
+<table-cell>Cluster.CCPImageTag        </table-cell>
+<table-cell>newly created containers will be based on this image version (e.g. centos7-10.3-1.8.1), unless you override it using the --ccp-image-tag command line flag</table-cell>
+</table-row>
+<table-row>
+<table-cell>Cluster.Port        </table-cell>
+<table-cell>the PostgreSQL port to use for new containers (e.g. 5432)</table-cell>
+</table-row>
+<table-row>
+<table-cell>Cluster.User        </table-cell>
+<table-cell>the PostgreSQL normal user name</table-cell>
+</table-row>
+<table-row>
+<table-cell>Cluster.Strategy        </table-cell>
+<table-cell>sets the deployment strategy to be used for deploying a cluster, currently there is only strategy <b>1</b></table-cell>
+</table-row>
+<table-row>
+<table-cell>Cluster.Replicas        </table-cell>
+<table-cell>the number of cluster replicas to create for newly created clusters</table-cell>
+</table-row>
+<table-row>
+<table-cell>Cluster.Policies        </table-cell>
+<table-cell>optional, list of policies to apply to a newly created cluster, comma separated, must be valid policies in the catalog</table-cell>
+</table-row>
+<table-row>
+<table-cell>Cluster.PasswordAgeDays        </table-cell>
+<table-cell>optional, if set, will set the VALID UNTIL date on passwords to this many days in the future when creating users or setting passwords, defaults to 60 days</table-cell>
+</table-row>
+<table-row>
+<table-cell>Cluster.PasswordLength        </table-cell>
+<table-cell>optional, if set, will determine the password length used when creating passwords, defaults to 8</table-cell>
+</table-row>
+<table-row>
+<table-cell>PrimaryStorage    </table-cell>
+<table-cell>required, the value of the storage configuration to use for the primary PostgreSQL deployment</table-cell>
+</table-row>
+<table-row>
+<table-cell>BackupStorage    </table-cell>
+<table-cell>required, the value of the storage configuration to use for backups</table-cell>
+</table-row>
+<table-row>
+<table-cell>ReplicaStorage    </table-cell>
+<table-cell>required, the value of the storage configuration to use for the replica PostgreSQL deployments</table-cell>
+</table-row>
+<table-row>
+<table-cell>Storage.storage1.StorageClass        </table-cell>
+<table-cell>for a dynamic storage type, you can specify the storage class used for storage provisioning(e.g. standard, gold, fast)</table-cell>
+</table-row>
+<table-row>
+<table-cell>Storage.storage1.AccessMode        </table-cell>
+<table-cell>the access mode for new PVCs (e.g. ReadWriteMany, ReadWriteOnce, ReadOnlyMany). See below for descriptions of these.</table-cell>
+</table-row>
+<table-row>
+<table-cell>Storage.storage1.Size        </table-cell>
+<table-cell>the size to use when creating new PVCs (e.g. 100M, 1Gi)</table-cell>
+</table-row>
+<table-row>
+<table-cell>Storage.storage1.StorageType        </table-cell>
+<table-cell>supported values are either <b>dynamic</b>, <b>existing</b>, <b>create</b>, or <b>emptydir</b>, if not supplied, <b>emptydir</b> is used</table-cell>
+</table-row>
+<table-row>
+<table-cell>Storage.storage1.Fsgroup        </table-cell>
+<table-cell>optional, if set, will cause a <b>SecurityContext</b> and <b>fsGroup</b> attributes to be added to generated Pod and Deployment definitions</table-cell>
+</table-row>
+<table-row>
+<table-cell>Storage.storage1.SupplementalGroups        </table-cell>
+<table-cell>optional, if set, will cause a SecurityContext to be added to generated Pod and Deployment definitions</table-cell>
+</table-row>
+<table-row>
+<table-cell>DefaultContainerResource    </table-cell>
+<table-cell>optional, the value of the container resources configuration to use for all database containers, if not set, no resource limits or requests are added on the database container</table-cell>
+</table-row>
+<table-row>
+<table-cell>ContainerResources.small.RequestsMemory        </table-cell>
+<table-cell>request size of memory in bytes</table-cell>
+</table-row>
+<table-row>
+<table-cell>ContainerResources.small.RequestsCPU        </table-cell>
+<table-cell>request size of CPU cores</table-cell>
+</table-row>
+<table-row>
+<table-cell>ContainerResources.small.LimitsMemory        </table-cell>
+<table-cell>request size of memory in bytes</table-cell>
+</table-row>
+<table-row>
+<table-cell>ContainerResources.small.LimitsCPU        </table-cell>
+<table-cell>request size of CPU cores</table-cell>
+</table-row>
+<table-row>
+<table-cell>ContainerResources.large.RequestsMemory        </table-cell>
+<table-cell>request size of memory in bytes</table-cell>
+</table-row>
+<table-row>
+<table-cell>ContainerResources.large.RequestsCPU        </table-cell>
+<table-cell>request size of CPU cores</table-cell>
+</table-row>
+<table-row>
+<table-cell>ContainerResources.large.LimitsMemory        </table-cell>
+<table-cell>request size of memory in bytes</table-cell>
+</table-row>
+<table-row>
+<table-cell>ContainerResources.large.LimitsCPU        </table-cell>
+<table-cell>request size of CPU cores</table-cell>
+</table-row>
+<table-row>
+<table-cell>Pgo.LSPVCTemplate        </table-cell>
+<table-cell>the PVC lspvc template file that lists PVC contents</table-cell>
+</table-row>
+<table-row>
+<table-cell>Pgo.LoadTemplate        </table-cell>
+<table-cell>the load template file used for load jobs</table-cell>
+</table-row>
+<table-row>
+<table-cell>Pgo.COImagePrefix        </table-cell>
+<table-cell>image tag prefix to use for the Operator containers</table-cell>
+</table-row>
+<table-row>
+<table-cell>Pgo.COImageTag        </table-cell>
+<table-cell>image tag to use for the Operator containers</table-cell>
+</table-row>
+<table-row>
+<table-cell>Pgo.Audit        </table-cell>
+<table-cell>boolean, if set to true will cause each apiserver call to be logged with an <b>audit</b> marking</table-cell>
+</table-row>
+<table-row>
+<table-cell>Pgo.Metrics        </table-cell>
+<table-cell>boolean, if set to true will cause each new cluster to include crunchy-collect as a sidecar container for metrics collection, if set to false (default), users can still add metrics on a cluster-by-cluster basis using the pgo command flag --metrics</table-cell>
+</table-row>
+</table-data>
+</table>
+</section>
+<section id="_storage_configurations">
+<title>Storage Configurations</title>
+<p>You can now define n-number of Storage configurations within the <b>pgo.yaml</b> file.  Those Storage configurations follow these conventions:</p>
+<list>
+<list-item>
+they must have lowercase name (e.g. storage1)
+</list-item>
+<list-item>
+they must be unique names (e.g. mydrstorage, faststorage, slowstorage)
+</list-item>
+</list>
+<p>These Storage configurations are referenced in the BackupStorage, ReplicaStorage, and PrimaryStorage configuration values.  However, there are command line
+options in the <b>pgo</b> client that will let a user override these default global
+values to offer you the user a way to specify very targeted storage configurations
+when needed (e.g. disaster recovery storage for certain backups).</p>
+<p>You can set the storage AccessMode values to the following:</p>
+<list>
+<list-item>
+<b>ReadWriteMany</b> - mounts the volume as read-write by many nodes
+</list-item>
+<list-item>
+<b>ReadWriteOnce</b> - mounts the PVC as read-write by a single node
+</list-item>
+<list-item>
+<b>ReadOnlyMany</b> - mounts the PVC as read-only by many nodes
+</list-item>
+</list>
+<p>These Storage configurations are validated when the <b>pgo-apiserver</b> starts, if a
+non-valid configuration is found, the apiserver will abort.  These Storage values are only read at <b>apiserver</b> start time.</p>
+<p>The following StorageType values are possible:</p>
+<list>
+<list-item>
+<b>dynamic</b> - this will allow for dynamic provisioning of storage using a StorageClass.
+</list-item>
+<list-item>
+<b>existing</b> - This setting allows you to use a PVC that already exists.  For example, if you have a NFS volume mounted to a PVC, all PostgreSQL clusters can write to that NFS volume mount via a common PVC. When set, the Name setting is used for the PVC.
+</list-item>
+<list-item>
+<b>create</b> - This setting allows for the creation of a new PVC for each PostgreSQL cluster using a naming convention of <b>clustername</b>-pvc*.  When set, the <b>Size</b>, <b>AccessMode</b> settings are used in constructing the new PVC.
+</list-item>
+<list-item>
+<b>emptydir</b> - If a StorageType value is not defined, <b>emptydir</b> is used by default.  This is a volume type that's created when a pod is assigned to a node and exists as long as that pod remains running on that node; it is deleted as soon as the pod is manually deleted or removed from the node.
+</list-item>
+</list>
+<p>The operator will create new PVCs using this naming convention:
+<b>dbname-pvc</b> where <b>dbname</b> is the database name you have specified.  For
+example, if you run:</p>
+<code-block>pgo create cluster example1</code-block>
+<p>It will result in a PVC being created named <b>example1-pvc</b> and in
+the case of a backup job, the pvc is named <b>example1-backup-pvc</b></p>
+<p>There are currently 3 sample pgo configuration files provided
+for users to use as a starting configuration:</p>
+<list>
+<list-item>
+pgo.yaml.emptydir - this configuration specifies <b>emptydir</b> storage to be used for databases
+</list-item>
+<list-item>
+pgo.yaml.nfs - this configuration specifies <b>create</b> storage to be used, this is used for NFS storage for example where you want to have a unique PVC created for each database
+</list-item>
+<list-item>
+pgo.yaml.dynamic - this configuration specifies <b>dynamic</b> storage to be used, namely a <b>storageclass</b> that refers to a dynamic provisioning strorage such as StorageOS or Portworx, or GCE.
+</list-item>
+</list>
+</section>
+<section id="_overriding_container_resources_configuration_defaults">
+<title>Overriding Container Resources Configuration Defaults</title>
+<p>In the <b>pgo.yaml</b> configuration file you have the option to configure a default container resources configuration that when set will add CPU and memory resource limits and requests values into each database container when the container is created.</p>
+<p>You can also override the default value using the <b>--resources-config</b> command flag when creating a new cluster:</p>
+<code-block>pgo create cluster testcluster --resources-config=large</code-block>
+<p>Note, if you try to allocate more resources than your
+host or Kube cluster has available then you will see your
+pods wait in a <b>Pending</b> status.   The output from a <b>kubectl describe pod</b>
+command will show output like this in this case:</p>
+<code-block>Events:
+  Type     Reason            Age               From               Message
+  ----     ------            ----              ----               -------
+  Warning  FailedScheduling  49s (x8 over 1m)  default-scheduler  No nodes are available that match all of the predicates: Insufficient memory (1).</code-block>
+</section>
+<section id="_overriding_storage_configuration_defaults">
+<title>Overriding Storage Configuration Defaults</title>
+<code-block>pgo create cluster testcluster --storage-config=bigdisk</code-block>
+<p>That example will create a cluster and specify a storage configuration of <b>bigdisk</b> to be used for the primary database storage, the replica storage will default to the value of ReplicaStorage as specified in <b>pgo.yaml</b>.</p>
+<code-block>pgo create cluster testcluster2 --storage-config=fastdisk --replica-storage-config=slowdisk</code-block>
+<p>That example will create a cluster and specify a storage configuration of <b>fastdisk</b> to be used for the primary database storage, the replica storage will use the storage configuration <b>slowdisk</b>.</p>
+<code-block>pgo backup testcluster --storage-config=offsitestorage</code-block>
+<p>That example will create a backup and use the <b>offsitestorage</b> storage configuration for persisting the backup.</p>
+</section>
+<section id="_disaster_recovery_using_storage_configurations">
+<title>Disaster Recovery Using Storage Configurations</title>
+<p>A simple mechanism for partial disaster recovery can be obtained by leveraging network storage, Kubernetes storage classes, and the storage configuration options within the Operator.</p>
+<p>For example, if you define a Kubernetes storage class that refers to a storage backend that is running within your disaster recovery site, and then use that storage class as a storage configuration for your backups, you essentially have moved your backup files automatically to your DR site thanks to network storage.</p>
+<image type="block" src="Operator-DR-Storage.png?raw=true" alt="Operator-DR-Storage.png?raw=true" />
+</section>
+</section>
+<section id="_b_postgres_operator_b_container_configuration">
+<title><b>postgres-operator</b> Container Configuration</title>
+<p>To enable <b>debug</b> level messages from the operator pod, set the <b>CRUNCHY_DEBUG</b> environment variable to <b>true</b> within its deployment file <b>deployment.json</b>.</p>
+<section id="_operator_templates">
+<title>Operator Templates</title>
+<p>The database and cluster Kubernetes objects that get created by the operator are based on json templates that are added into the operator deployment by means of a mounted volume.</p>
+<p>The templates are located in the <b>$COROOT/conf/postgres-operator</b> directory and get added into a config map which is mounted by the operator deployment.</p>
+</section>
+</section>
+</section>
+<section id="_bash_completion">
+<title>bash Completion</title>
+<p>There is a bash completion file that is included for users to try, this
+is located in the repository at <b>example/pgo-bash-completion</b>. To use it:</p>
+<code-block>cp $COROOT/example/pgo-bash-completion /etc/bash_completion.d/pgo
+su - $USER</code-block>
+</section>
+<section id="_rest_api">
+<title>REST API</title>
+<p>Because the <b>apiserver</b> implements a REST API, you can integrate with it using your own application code.  To demonstrate this, the following <b>curl</b> commands show the API usage:</p>
+<p><b>pgo version</b></p>
+<code-block>curl -v -X GET -u readonlyuser:testpass -H "Content-Type: application/json" --insecure https://10.101.155.218:8443/version</code-block>
+<p><b>pgo show policy all</b></p>
+<code-block>curl -v -X GET -u readonlyuser:testpass -H "Content-Type: application/json" --insecure https://10.101.155.218:8443/policies/all</code-block>
+<p><b>pgo show pvc danger-pvc</b></p>
+<code-block>curl -v -X GET -u readonlyuser:testpass -H "Content-Type: application/json" --insecure https://10.101.155.218:8443/pvc/danger-pvc</code-block>
+<p><b>pgo show cluster mycluster</b></p>
+<code-block>curl -v -X GET -u readonlyuser:testpass -H "Content-Type: application/json" --insecure https://10.101.155.218:8443/clusters/mycluster</code-block>
+<p><b>pgo show upgrade mycluster</b></p>
+<code-block>curl -v -X GET -u readonlyuser:testpass -H "Content-Type: application/json" --insecure https://10.101.155.218:8443/upgrades/mycluster</code-block>
+<p><b>pgo test mycluster</b></p>
+<code-block>curl -v -X GET -u readonlyuser:testpass -H "Content-Type: application/json" --insecure https://10.101.155.218:8443/clusters/test/mycluster</code-block>
+<p><b>pgo show backup mycluster</b></p>
+<code-block>curl -v -X GET -u readonlyuser:testpass -H "Content-Type: application/json" --insecure https://10.101.155.218:8443/backups/mycluster</code-block>
+</section>
+<section id="_deploying_pgpool">
+<title>Deploying pgpool</title>
+<p>It is optional but you can cause a pgpool Deployment to be
+created as part of a Postgres cluster.  Running pgpool only
+makes sense when you have both a primary and some number of
+replicas deployed as part of your Postgres cluster.  The current
+pgpool configuration deployed by the operator only works when
+you have both a primary and replica running.</p>
+<p>When a user creates the cluster they can pass a command flag as follows:</p>
+<code-block>pgo create cluster cluster1 --pgpool
+pgo scale cluster1</code-block>
+<p>This will cause the operator to create a Deployment that includes
+the <b>crunchy-pgpool</b> container along with a replica.  That container will create
+a configuration that will perform SQL routing to your
+cluster services, both for the primary and replica services.</p>
+<p>Pgpool examines the SQL it receives and routes the SQL statement
+to either the primary or replica based on the SQL action specifically
+it will send writes and updates to only the <b>primary</b> service.  It
+will send read-only statements to the <b>replica</b> service.</p>
+<p>When the operator deploys the pgpool container, it creates a
+secret (e.g. mycluster-pgpool-secret) that contains pgpool
+configuration files.  It fills out templated versions of these
+configuration files specifically for this postgres cluster.</p>
+<p>Part of the pgpool deployment also includes creating a <b>pool_passwd</b>
+file that will allow the <b>testuser</b> credential to authenticate
+to pgpool.  Adding additional users to the pgpool configuration
+currently requires human intervention specifically creating
+a new pgpool secret and bouncing the pgpool pod to pick up the
+updated secret.  Future operator releases will attempt to
+provide <b>pgo</b> commands to let you automate the addition or removal
+of a pgpool user.</p>
+<p>Currently to update a pgpool user within the <b>pool_passwd</b> configuration
+file, you will have to copy the existing files from the
+secret to your local system, update the credentials in <b>pool_passwd</b>
+with your new user credentials, and then recreate the pgpool
+secret, and finally restart the pgpool pod to pick up the updated
+configuration files.</p>
+<p>Example:</p>
+<code-block>kubectl cp demo/wed10-pgpool-6cc6f6598d-wcnmf:/pgconf/ /tmp/foo</code-block>
+<p>That command gets a running set of secret pgpool configuration
+files and places them locally on your system for you to edit.</p>
+<p><b>pgpool</b> requires a specially formatted password credential
+to be placed into <b>pool_passwd</b>.  There is a golang program
+included in $COROOT/golang-examples/gen-pgpool-pass.go* that
+when run will generate the value to use within the <b>pgpool_passwd</b>
+configuration file.</p>
+<code-block>go run $COROOT/golang-examples/gen-pgpool-pass.go
+Enter Username: testuser
+Enter Password:
+Password typed: e99Mjt1dLz
+hash of password is [md59c4017667828b33762665dc4558fbd76]</code-block>
+<p>The value <b>md59c4017667828b33762665dc4558fbd76</b> is what you will use
+in the <b>pool_passwd</b> file.</p>
+<p>Then, create the new secrets file based on those updated files:</p>
+<code-block>$COROOT/bin/create-pgpool-secrets.sh</code-block>
+<p>Lastly for pgpool to pick up the new secret file, delete the existing
+deployment pod:</p>
+<code-block>kubectl get deployment wed-pgpool
+kubectl delete pod wed10-pgpool-6cc6f6598d-wcnmf</code-block>
+<p>The pgpool deployment will spin up another pgpool which will pick up
+the updated secret file.</p>
+</section>
+</doc>

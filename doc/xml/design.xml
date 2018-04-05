@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE doc SYSTEM "doc.dtd">
+<doc title="postgres Operator Design">
+<description>postgres Operator Design</description>
+<section id="_reference_architecture">
+<title>Reference Architecture</title>
+<p>So, what does the Postgres Operator actually deploy
+when you create a cluster?</p>
+<image type="block" src="OperatorReferenceDiagram.png?raw=true" alt="OperatorReferenceDiagram.png?raw=true" />
+<p>On this diagram, objects with dashed lines are things
+that are optionally deployed as part of a Postgres Cluster
+by the Operator and objects with solid lines are
+the fundamental and required components.</p>
+<p>For example, within the Primary Deployment, the <b>metrics</b> container
+is completely optional, you can deploy that component using
+Operator configuration or command line arguments if you want
+to cause metrics to be collected from the Postgres container.</p>
+<p>Replica deployments are just like the Primary deployment but
+are optional.  You do not have to create a Replica at all
+unless you need that capability.  As you scale up your Postgres
+cluster, the  standard set of components gets deployed and
+replication to the Primary is started.</p>
+<p>Lastly, in a future release, you will be able to optionally
+deploy a Pgpool service and Deployment that can act as a
+SQL <b>router</b> to your Postgres cluster.</p>
+<p>Notice that each cluster deployment gets its own unique
+Persistent Volumes.  Each volume can use different storage
+configurations which is quite powerful.</p>
+</section>
+<section id="_custom_resource_definitions">
+<title>Custom Resource Definitions</title>
+<p>Kubernetes Custom Resource Definitions are used in the design
+of the postgres Operator to define:</p>
+<list>
+<list-item>
+Cluster - <b>pgclusters</b>
+</list-item>
+<list-item>
+Backup - <b>pgbackups</b>
+</list-item>
+<list-item>
+Upgrade - <b>pgupgrades</b>
+</list-item>
+<list-item>
+Policy - <b>pgpolicies</b>
+</list-item>
+<list-item>
+Tasks - <b>pgtasks</b>
+</list-item>
+</list>
+<p>A PostgreSQL Cluster is made up of multiple Deployments and Services.  Optionally you can add a metrics collection container to your database pods.</p>
+</section>
+<section id="_command_line_interface">
+<title>Command Line Interface</title>
+<p>The pgo command line interface (CLI) is used by a normal end-user
+to create databases or clusters, or make changes to existing databases.</p>
+<p>The CLI interacts interacts with the <b>apiserver</b> REST API deployed
+within the <b>postgres-operator</b> Deployment.</p>
+<p>From the CLI, users can view existing clusters that
+were deployed using the CLI and Operator.  Objects that were
+not created by the Crunchy Operator are now viewable from the CLI.</p>
+</section>
+<section id="_operator_deployment">
+<title>Operator Deployment</title>
+<p>The postgres Operator runs within a Deployment in the Kubernetes
+cluster.  An administrator will deploy the postgres Operator Deployment
+using the provided script.  Once installed and running, the Operator
+pod will start watching for certain defined events.</p>
+<p>The operator watches for create/update/delete actions on
+the <b>pgcluster</b> custom resource definitions.  When
+the CLI creates for example a new <b>pgcluster</b> custom resource
+definition, the operator catches that event and creates pods and services
+for that new cluster request.</p>
+</section>
+<section id="_cli_design">
+<title>CLI Design</title>
+<p>The CLI uses the cobra package to implement CLI functionality
+like help text, config file processing, and command line parsing.</p>
+<p>The <b>pgo</b> client is essentially a REST client which communicates
+to the <b>pgo-apiserver</b> REST server running within the Operator pod.  In
+some cases you might want to split the apiserver out into its own
+Deployment but the default deployment has a consolidated pod
+that contains both the apiserver and operator containers simply for
+convenience of deployment and updates.</p>
+<section id="_verbs">
+<title>Verbs</title>
+<p>A user works with the CLI by entering verbs to indicate
+what they want to do, as follows:</p>
+<code-block>pgo show cluster all
+pgo delete cluster db1 db2 db3
+pgo create cluster mycluster</code-block>
+<p>In the above example, the <b>show</b>, <b>backup</b>, <b>delete</b>, and <b>create</b> verbs are used.  The CLI is case sensitive and supports only lowercase.</p>
+</section>
+</section>
+<section id="_affinity">
+<title>Affinity</title>
+<p>You can have the Operator add an affinity section to
+a new Cluster Deployment if you want to cause Kube to
+attempt to schedule a Primary cluster to a specific Kube node.</p>
+<p>You can see the nodes on your Kube cluster by:</p>
+<code-block>kubectl get nodes</code-block>
+<p>You can then specify one of those names (e.g. kubeadm-node2)  when creating a cluster:</p>
+<code-block>pgo create cluster thatcluster --node-name=kubeadm-node2</code-block>
+<p>The affinity rule inserted in the Deployment will used a <b>preferred</b>
+strategy so that if the node were down or not available, Kube would
+go ahead and schedule the Pod on another node.</p>
+<p>You can always view the actual node your cluster pod is scheduled
+on by:</p>
+<code-block>kubectl get pod -o wide</code-block>
+<p>When you scale up a Cluster and add a replica, the scaling will
+take into account the use of <quote>--node-name</quote>  If it sees that a
+cluster was created with a specific node name, then the replica
+Deployment will add an affinity rule to attempt to schedule
+the replica on a different node than the node the primary is
+schedule on.  This gets you a simple for of High Availability so
+that your primary and replicas will not live on the same Kube node.</p>
+</section>
+<section id="_debugging">
+<title>Debugging</title>
+<p>To see if the operator pod is running enter the following:</p>
+<code-block>kubectl get pod -l 'name=postgres-operator'</code-block>
+<p>To verify the operator is running and has deployed the Custom Resources execute the following:</p>
+<code-block>kubectl get crd
+NAME                               KIND
+pgbackups.cr.client-go.k8s.io      CustomResourceDefinition.v1beta1.apiextensions.k8s.io
+pgclusters.cr.client-go.k8s.io     CustomResourceDefinition.v1beta1.apiextensions.k8s.io
+pgpolicies.cr.client-go.k8s.io     CustomResourceDefinition.v1beta1.apiextensions.k8s.io
+pgpolicylogs.cr.client-go.k8s.io   CustomResourceDefinition.v1beta1.apiextensions.k8s.io
+pgupgrades.cr.client-go.k8s.io     CustomResourceDefinition.v1beta1.apiextensions.k8s.io
+pgtasks.cr.client-go.k8s.io        CustomResourceDefinition.v1beta1.apiextensions.k8s.io</code-block>
+</section>
+<section id="_persistent_volumes">
+<title>Persistent Volumes</title>
+<p>Currently the operator does not delete persistent volumes by default, it will
+delete the claims on the volumes.  Starting with release 2.4, the Operator
+will create Jobs that actually run <b>rm</b> commands on the data volumes before
+actually removing the Persistent Volumes
+if the user passes a <b>--delete-data</b> flag when deleting a database
+cluster.</p>
+<p>Likewise, if the user passes <b>--delete-backups</b> during cluster deletion
+a Job is created to remove all the backups for a cluster include
+the related Persistent Volume.</p>
+</section>
+<section id="_postgresql_operator_deployment_strategies">
+<title>PostgreSQL Operator Deployment Strategies</title>
+<p>This section describes the various deployment strategies
+offered by the operator.  A deployment in this case is
+the set of objects created in Kubernetes when a
+custom resource definition of type <b>pgcluster</b> is created.
+CRDs are created by the pgo client command and acted upon
+by the postgres operator.</p>
+<section id="_strategies">
+<title>Strategies</title>
+<p>To support different types of deployments, the operator supports
+multiple strategy implementations.  Currently there is
+only a default <b>cluster</b> strategy.</p>
+<p>In the future, more deployment strategies will be supported
+to offer users more customization to what they see deployed
+in their Kube cluster.</p>
+<p>Being open source, users can also write their own strategy!</p>
+</section>
+<section id="_specifying_a_strategy">
+<title>Specifying a Strategy</title>
+<p>In the pgo client configuration file, there is a
+<b>CLUSTER.STRATEGY</b> setting.  The current value of the
+default strategy is <b>1</b>.  If you don't set that value, the
+default strategy is assumed.  If you set that value to something
+not supported, the operator will log an error.</p>
+</section>
+<section id="_strategy_template_files">
+<title>Strategy Template Files</title>
+<p>Each strategy supplies its set of templates used by the operator
+to create new pods, services, etc.</p>
+<p>When the operator is deployed, part of the deployment process
+is to copy the required strategy templates into a ConfigMap (<b>operator-conf</b>)
+that gets mounted into <b>/operator-conf</b> within the operator pod.</p>
+<p>The directory structure of the strategy templates is as
+follows:</p>
+<code-block>|-- backup-job.json
+|-- cluster
+|   |-- 1
+|       |-- cluster-deployment-1.json
+|       |-- cluster-replica-deployment-1.json
+|       |-- cluster-service-1.json
+|
+|-- pvc.json</code-block>
+<p>In this structure, each strategy's templates live in a subdirectory
+that matches the strategy identifier.  The default strategy templates
+are denoted by the value of <b>1</b> in the directory structure above.</p>
+<p>If you add another strategy, the file names <b>must</b> be unique within
+the entire strategy directory.  This is due to the way the templates
+are stored within the ConfigMap.</p>
+</section>
+<section id="_default_cluster_deployment_strategy_1">
+<title>Default Cluster Deployment Strategy (1)</title>
+<p>Using the default cluster strategy, a <b>cluster</b> when created by the operator will create the
+following on a Kube cluster:</p>
+<list>
+<list-item>
+deployment running a Postgres <b>primary</b> container with replica count of 1
+</list-item>
+<list-item>
+service mapped to the <b>primary</b> Postgres database
+</list-item>
+<list-item>
+service mapped to the <b>replica</b> Postgres database
+</list-item>
+<list-item>
+PVC for the <b>primary</b> will be created if not specified in configuration, this
+   assumes you are using a non-shared volume technology (e.g. Amazon EBS),
+   if the CLUSTER.PVC_NAME value is set in your configuration then a
+   shared volume technology is assumed (e.g. HostPath or NFS), if a PVC
+   is created for the primary, the naming convention is <b>clustername-pvc</b>
+   where clustername is the name of your cluster.
+</list-item>
+</list>
+<p>If you want to add a Postgres replica to a cluster, you will
+<b>scale</b> the cluster, for each <b>replica-count</b>, a Deployment
+will be created that acts as a Postgres replica.</p>
+<p>This is very different than using say a StatefulSet to scale
+up Postgres.  Why would I do it this way?  Imagine a case
+where you want different parts of your Postgres cluster to
+use different storage configurations, I can do that by doing
+specific placement and deployments of each part of the cluster.</p>
+<p>This same concept applies to node selection for your Postgres
+cluster components.  The Operator will let you define precisely
+which node you want each Postgres component to be placed upon
+using node affinity rules.</p>
+</section>
+<section id="_cluster_deletion">
+<title>Cluster Deletion</title>
+<p>When you run the following:</p>
+<code-block>pgo delete cluster mycluster</code-block>
+<p>The cluster and its services will be deleted.  However the data files
+and backup files will remain, same with the PVCs for this cluster, they
+all remain.</p>
+<p>However, to remove the data files from the PVC you can pass a flag:</p>
+<code-block>--delete-data</code-block>
+<p>which will cause a workflow to be started to actually remove the
+data files on the primary cluster deployment PVC.</p>
+<p>Also, if you pass a flag:</p>
+<code-block>--delete-backups</code-block>
+<p>it will cause <b>all</b> the backup files to be removed.</p>
+<p>The data removal workflow includes the following steps:</p>
+<list>
+<list-item>
+create a pgtask CRD to hold the PVC name and cluster name to be removed
+</list-item>
+<list-item>
+the CRD is watched, and on an ADD will cause a Job to be created that will run the <b>rmdata</b> container using the PVC name and cluster name as parameters which determine the PVC to mount, and the file path to remove under that PVC
+</list-item>
+<list-item>
+the <b>rmdata</b> Job is watched by the Operator, and upon a successful status completion the actual PVC is removed
+</list-item>
+</list>
+<p>This workflow insures that a PVC is not removed until all the data files are removed.  Also, a Job was used for the removal of files since that can be a time consuming task.</p>
+<p>The files are removed by the <b>rmdata</b> container which essentially
+issues the following command to remove the files:</p>
+<code-block>rm -rf /pgdata/&lt;some path&gt;</code-block>
+</section>
+<section id="_custom_postgres_configurations">
+<title>Custom Postgres Configurations</title>
+<p>Starting in release 2.5, users and administrators can specify a
+custom set of Postgres configuration files be used when creating
+a new Postgres cluster.  The configuration files you can
+change include:</p>
+<list>
+<list-item>
+postgresql.conf
+</list-item>
+<list-item>
+pg_hba.conf
+</list-item>
+<list-item>
+setup.sql
+</list-item>
+</list>
+<p>Different configurations for Postgres might be defined for
+the following:</p>
+<list>
+<list-item>
+OLTP types of databases
+</list-item>
+<list-item>
+OLAP types of databases
+</list-item>
+<list-item>
+High Memory
+</list-item>
+<list-item>
+Minimal Configuration for Development
+</list-item>
+<list-item>
+Project Specific configurations
+</list-item>
+<list-item>
+Special Security Requirements
+</list-item>
+</list>
+<section id="_global_configmap">
+<title>Global ConfigMap</title>
+<p>If you create a <b>configMap</b> called <b>pgo-custom-pg-config</b> with any
+of the above files within it, new clusters will use those configuration
+files when setting up a new database instance.  You do <b>NOT</b> have to
+specify all of the configuration files, its up to your use case
+which ones to use.</p>
+<p>An example set of configuration files and a script to create the
+global configMap is found at:</p>
+<code-block>$COROOT/examples/custom-config</code-block>
+<p>If you run the <b>create.sh</b> script there, it will create the configMap
+that will include the Postgres configuration files within that directory.</p>
+</section>
+<section id="_config_files_purpose">
+<title>Config Files Purpose</title>
+<p>The <b>postgresql.conf</b> file is the main Postgresql configuration file allowing you to define a wide variety of tuning parameters and features.</p>
+<p>The <b>pg_hba.conf</b> file is the way Postgresql secures down client access.</p>
+<p>The <b>setup.sql</b> file is a Crunchy Container Suite configuration
+file used to initially populate the database after the initial <b>initdb</b>
+is run when the database is first created.  You would make changes
+to this if you wanted to define what database objects always
+are created.</p>
+</section>
+<section id="_granular_config_maps">
+<title>Granular Config Maps</title>
+<p>So, lets say you want to use a different set of configuration
+files for different clusters instead of having just a single
+configuration (e.g. Global Config Map).  You can create
+your own set of ConfigMaps with their own set of Postgresql
+configuration files.  When creating new clusters, you
+can pass a <b>--custom-config</b> flag along with the name of your
+ConfigMap and that will be used for that specific cluster or
+set of clusters.</p>
+</section>
+<section id="_default">
+<title>Default</title>
+<p>Lets say you are happy with the default Postgresql configuration
+files that ship with the Crunchy Postgres container.  You don't have
+to do anything essentially, just keep using the Operator as normal.
+Just be sure to not define a global configMap or pass the
+command line flag.</p>
+</section>
+<section id="_labeling">
+<title>Labeling</title>
+<p>You will notice that when a custom configMap is used in cluster
+creation, the Operator labels the primary Postgres Deployment
+with a label that hase a <b>custom-config</b> label and a value
+of what configMap was used when creating the database.</p>
+<p>Commands coming in future releases will take advantage of this
+labeling.</p>
+</section>
+</section>
+<section id="_metrics_collection">
+<title>Metrics Collection</title>
+<p>If you add a <b>--metrics</b> flag to <b>pgo create cluster</b> it will
+cause the <b>crunchy-collect</b> container to be added to your
+Postgres cluster.</p>
+<p>That container requires you run the <b>crunchy-metrics</b> containers
+as defined within the <b>crunchy-containers</b> project.</p>
+<p>The <b>prometheus push gateway</b> that is deployed as part of the
+<b>crunchy-metrics</b> example is a current requirement for the
+metrics solution.  This will change in an upcoming
+release of the <b>crunchy-containers</b> project and there will
+no longer be a requirement for the push gateway to be deployed.</p>
+<p>See <link url="https://github.com/CrunchyData/crunchy-containers/blob/master/docs/metrics.adoc">https://github.com/CrunchyData/crunchy-containers/blob/master/docs/metrics.adoc</link> and <link url="https://github.com/CrunchyData/crunchy-containers/blob/master/docs/examples.adoc#metrics-collection">https://github.com/CrunchyData/crunchy-containers/blob/master/docs/examples.adoc#metrics-collection</link> for more details on setting up the <b>crunchy-metrics</b> solution.</p>
+</section>
+</section>
+</doc>
