@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE doc SYSTEM "doc.dtd">
+<doc title="PostgreSQL Operator Build Instructions">
+<description>PostgreSQL Operator Build Instructions</description>
+<section id="_overview">
+<title>Overview</title>
+<p>This document describes how to build from source code the
+Postgres Operator, mostly this is for developers or people
+wanting to hack on the operator.</p>
+<p>This document assumes you have already followed the Install instructions and have a working Kube environment.</p>
+</section>
+<section id="_requirements">
+<title>Requirements</title>
+<p>The operator is developed with the Golang versions great than or equal to version 1.8  See
+<link url="https://golang.org/dl/">Golang website</link> for details on installing golang.</p>
+<p>The Operator project builds and operates with the following containers:</p>
+<list>
+<list-item>
+<link url="https://hub.docker.com/r/crunchydata/pgo-lspvc/">PVC Listing Container</link>
+</list-item>
+<list-item>
+<link url="https://hub.docker.com/r/crunchydata/pgo-rmdata/">Remove Data Container</link>
+</list-item>
+<list-item>
+<link url="https://hub.docker.com/r/crunchydata/postgres-operator/">postgres-operator Container</link>
+</list-item>
+<list-item>
+<link url="https://hub.docker.com/r/crunchydata/pgo-apiserver/">apiserver Container</link>
+</list-item>
+<list-item>
+<link url="https://hub.docker.com/r/crunchydata/pgo-load/">file load Container</link>
+</list-item>
+</list>
+<p>This Operator is developed and tested on the following operating systems but is known to run on other operating systems:</p>
+<list>
+<list-item>
+<b>CentOS 7</b>
+</list-item>
+<list-item>
+<b>RHEL 7</b>
+</list-item>
+</list>
+<section id="_kubernetes_environment">
+<title>Kubernetes Environment</title>
+<p>To test the <b>postgres-operator</b>, it is required to have a Kubernetes cluster
+environment.  The Operator is tested on Kubeadm Kubernetes installed clusters.  Other Kubernetes installation methods have been known to work as well.</p>
+<p><link url="https://kubernetes.io/docs/setup/independent/install-kubeadm/">Installing kubeadm - Official Kubernetes Documentation</link></p>
+</section>
+</section>
+<section id="_build_from_source">
+<title>Build from Source</title>
+<p>Install a golang compiler, this can be done with either your package manager or by following directions from <link url="https://golang.org/dl/">https://golang.org/dl/</link>.  The operator is currently built using golang version 1.8.X but also runs using golang version 1.9.X</p>
+<p>Then install the project library dependencies, the godep dependency manager is used as follows:</p>
+<code-block>cd $COROOT
+make setup</code-block>
+<section id="_compiling_the_postgresql_operator">
+<title>Compiling the PostgreSQL Operator</title>
+<code-block>cd $COROOT
+make all
+which pgo</code-block>
+</section>
+<section id="_create_namespace">
+<title>Create Namespace</title>
+<p>This example is based on a kubeadm installation with the admin
+user being already created. The example below assumes the cluster name is <b>kubernetes</b> and the cluster default user is <b>kubernetes-admin</b>.</p>
+<code-block>kubectl create -f $COROOT/examples/demo-namespace.json
+kubectl get namespaces</code-block>
+<p>then set your context to the new demo namespace</p>
+<code-block>sudo chmod o+w /etc/kubernetes
+sudo chmod o+w /etc/kubernetes/admin.conf
+kubectl config set-context demo --namespace=demo --cluster=kubernetes --user=kubernetes-admin
+kubectl config use-context demo
+kubectl config current-context</code-block>
+<p>Permissions are granted to the Operator by means of a Service Account called <b>postgres-operator</b>.  That service account is added to the Operator deployment.</p>
+<p>The postgres-operator service account is granted cluster-admin priviledges using a cluster role binding <b>postgres-operator-cluster-role-binding</b>.</p>
+<p>See <link url="https://kubernetes.io/docs/admin/authorization/rbac/">here</link> for more details on how to enable RBAC roles and modify the scope of the permissions to suit your needs.</p>
+<p>The sample service account and cluster role bindings specify the <b>demo</b> namespace.  Edit the yaml definitions of these to match the namespace you are deploying the operator into.</p>
+<p>If you are not using the <b>demo</b> namespace, you will edit the following:</p>
+<list>
+<list-item>
+$COROOT/deploy/service-account.yaml
+</list-item>
+<list-item>
+$COROOT/deploy/cluster-role-binding.yaml
+</list-item>
+</list>
+</section>
+<section id="_deploy_the_postgresql_operator">
+<title>Deploy the PostgreSQL Operator</title>
+<p><b>NOTE</b>: This will create and use <b>/data</b> on your
+local system as the persistent store for the operator to use
+for its persistent volume.</p>
+<code-block>cd $COROOT
+make deployoperator
+kubectl get pod -l 'name=postgres-operator'</code-block>
+<p>You should see output similar to:</p>
+<code-block>NAME                                 READY     STATUS    RESTARTS   AGE
+postgres-operator-7f8db87c7b-4tk52   2/2       Running   0          8s</code-block>
+<p>This output shows that both the <b>apiserver</b> and <b>postgres-operator</b> containers
+are in ready state and the pod is running.</p>
+<p>You can find the operator service IP address as follows:</p>
+<code-block>kubectl get service postgres-operator
+NAME                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+postgres-operator   ClusterIP   10.105.56.167   &lt;none&gt;        8080/TCP,8443/TCP   1m</code-block>
+<p>In this example, the <b>apiserver</b> is reachable at <b>https://10.105.56.167:8443</b>.</p>
+<p>When you first run the operator, it will create the required
+CustomResourceDefinitions. You can view these as follows:</p>
+<code-block>kubectl get crd</code-block>
+<p>Instead of using the bash script you can also deploy the operator using the provided Helm chart:</p>
+<code-block>cd $COROOT/chart
+helm install ./postgres-operator
+helm ls</code-block>
+</section>
+<section id="_verify_installation">
+<title>Verify Installation</title>
+<p>When you first run the operator, it will look for the presence of the
+predefined custom resource definitions, and create them if not found.
+The best way to verify a successful deployment of the Operator is by
+viewing these custom resource definitions:</p>
+<code-block>kubectl get crd
+kubectl get pgclusters
+kubectl get pgreplicas
+kubectl get pgbackups
+kubectl get pgupgrades
+kubectl get pgpolicies
+kubectl get pgingests
+kubectl get pgtasks</code-block>
+<p>At this point, you should be ready to start using the <b>pgo</b> client!  Be
+sure to set the environment variable <b>CO_APISERVER_URL</b> to the DNS
+name of the <b>postgres-operator</b> service or to the IP address of the
+<b>postgres-operator</b> service IP address.  For example:</p>
+<code-block>export CO_APISERVER_URL=https://10.105.56.167:8443</code-block>
+<p>Or if you have DNS configured on your client host:</p>
+<code-block>export CO_APISERVER_URL=https://postgres-operator.demo.svc.cluster.local:8443</code-block>
+</section>
+</section>
+<section id="_makefile_targets">
+<title>Makefile Targets</title>
+<p>The following table describes the Makefile targets:
+.Makefile Targets</p>
+<table>
+
+<table-header>
+<table-column align="left">Target </table-column>
+<table-column align="left"> Description</table-column>
+</table-header>
+
+<table-data>
+<table-row>
+<table-cell>all</table-cell>
+<table-cell>compile all binaries and build all images</table-cell>
+</table-row>
+<table-row>
+<table-cell>setup</table-cell>
+<table-cell>fetch the dependent packages required to build with</table-cell>
+</table-row>
+<table-row>
+<table-cell>deployoperator</table-cell>
+<table-cell>deploy the Operator (apiserver and postgers-operator) to Kubernetes</table-cell>
+</table-row>
+<table-row>
+<table-cell>main</table-cell>
+<table-cell>compile the postgres-operator</table-cell>
+</table-row>
+<table-row>
+<table-cell>runmain</table-cell>
+<table-cell>locally execute the postgres-operator</table-cell>
+</table-row>
+<table-row>
+<table-cell>pgo</table-cell>
+<table-cell>build the pgo binary</table-cell>
+</table-row>
+<table-row>
+<table-cell>runpgo</table-cell>
+<table-cell>run the pgo binary</table-cell>
+</table-row>
+<table-row>
+<table-cell>runapiserver</table-cell>
+<table-cell>run the apiserver binary outside of Kube</table-cell>
+</table-row>
+<table-row>
+<table-cell>clean</table-cell>
+<table-cell>remove binaries and compiled packages, restore dependencies</table-cell>
+</table-row>
+<table-row>
+<table-cell>operatorimage</table-cell>
+<table-cell>compile and build the postgres-operator Docker image</table-cell>
+</table-row>
+<table-row>
+<table-cell>apiserverimage</table-cell>
+<table-cell>compile and build the apiserver Docker image</table-cell>
+</table-row>
+<table-row>
+<table-cell>lsimage</table-cell>
+<table-cell>build the lspvc Docker image</table-cell>
+</table-row>
+<table-row>
+<table-cell>loadimage</table-cell>
+<table-cell>build the file load Docker image</table-cell>
+</table-row>
+<table-row>
+<table-cell>rmdataimage</table-cell>
+<table-cell>build the data deletion Docker image</table-cell>
+</table-row>
+<table-row>
+<table-cell>release</table-cell>
+<table-cell>build the postgres-operator release</table-cell>
+</table-row>
+</table-data>
+</table>
+</section>
+</doc>

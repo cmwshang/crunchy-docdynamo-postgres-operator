@@ -109,7 +109,7 @@ When you request a backup, **pgo** will prompt you if you want to proceed becaus
 
 To delete a backup enter the following:
 ```
-pgo delete backup mybackup
+pgo delete backup mycluster
 ```
 
 ### pgo delete cluster

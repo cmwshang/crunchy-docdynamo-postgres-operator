@@ -19,7 +19,7 @@ OPERATION="$2"
 if [[ "$#" -le 1 ]]; then
   echo "Usage:"
   echo "   $0 <name> <operation>"
-  echo "   - name: all | commands | configuration | design | install | quickstarts"
+  echo "   - name: all | commands | configuration | design | install | quickstarts | build"
   echo "   - operation: create | delete"
   exit
 fi
@@ -36,7 +36,7 @@ function create {
 
 
 if [[ ${NAME?} == "all" ]]; then
-  docs="commands configuration design install quickstarts"
+  docs="commands configuration design install quickstarts build"
 else
   docs="${NAME}"
 fi

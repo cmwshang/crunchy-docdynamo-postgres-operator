@@ -31,8 +31,8 @@
         <variable key="html-logo">&lt;img src=&quot;{[project-logo]}&quot;&gt;</variable>
 
         <!-- PDF variables -->
-        <variable key="pdf-install-subtitle">Installation Guide</variable>
-        <variable key="pdf-install-version">DRAFT</variable>
+        <variable key="pdf-install-subtitle">Installation and Quickstarts Guide</variable>
+        <variable key="pdf-install-version">v2.0</variable>
         <variable key="pdf-logo">cds-logo.eps</variable>
 
     </variable-list>
@@ -43,16 +43,18 @@
         <source key="design"/>
         <source key="install"/>
         <source key="quickstarts"/>
+        <source key="build"/>
     </source-list>
 
     <render-list>
         <render type="html">
             <footer-center>Prepared by Crunchy Data Solutions, Inc. &amp;mdash; {[prepare-date]}</footer-center>
+            <render-source key="install" menu="Install"/>
             <render-source key="configuration" menu="Configuration"/>
             <render-source key="commands" menu="Commands"/>
             <render-source key="design" menu="Design"/>
-            <render-source key="install" menu="Install"/>
             <render-source key="quickstarts" menu="Quickstarts"/>
+            <render-source key="build" menu="Build"/>
         </render>
 
         <render type="pdf" file="Install">
@@ -67,10 +69,10 @@
             <footer-center>\ \\-\ \thepage\ -</footer-center>
             <footer-right>{[organization]}\\\today</footer-right>
             <render-source key="install"/>
+            <render-source key="quickstarts"/>
             <!-- <render-source key="commands"/> -->
             <!-- <render-source key="configuration"/> -->
             <!-- <render-source key="design"/> -->
-            <!-- <render-source key="quickstarts"/> -->
         </render>
 
         <render type="markdown">
@@ -79,6 +81,7 @@
             <render-source key="design" file="DESIGN.md"/>
             <render-source key="install" file="INSTALL.md"/>
             <render-source key="quickstarts" file="QUICKSTARTS.md"/>
+            <render-source key="build" file="BUILD.md"/>
         </render>
     </render-list>
 </doc>

@@ -5,9 +5,15 @@
 <section id="_overview">
 <title>Overview</title>
 <p>There are currently <b>quickstart</b> scripts that seek to automate
-the deployment to popular Kube environments:
- * quickstart-for-gke.sh
- * quickstart-for-ocp.sh</p>
+the deployment to popular Kube environments:</p>
+<list>
+<list-item>
+<link url="../examples/quickstart-for-gke.sh">quickstart-for-gke.sh</link>
+</list-item>
+<list-item>
+<link url="../examples/quickstart-for-ocp.sh">quickstart-for-ocp.sh</link>
+</list-item>
+</list>
 <p>The <b>quickstart-for-gke</b> script will deploy the operator to
 a GKE Kube cluster.</p>
 <p>The <b>quickstart-for-ocp</b> script will deploy the operator to

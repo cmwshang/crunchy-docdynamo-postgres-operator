@@ -101,7 +101,7 @@ to creating a new Job with the same name.</p>
 <section id="_pgo_delete_backup">
 <title>pgo delete backup</title>
 <p>To delete a backup enter the following:</p>
-<code-block>pgo delete backup mybackup</code-block>
+<code-block>pgo delete backup mycluster</code-block>
 </section>
 <section id="_pgo_delete_cluster">
 <title>pgo delete cluster</title>

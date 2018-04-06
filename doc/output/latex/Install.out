@@ -15,3 +15,7 @@
 \BOOKMARK [3][-]{subsubsection.5.1.2}{Dynamic Storage}{subsection.5.1}% 15
 \BOOKMARK [2][-]{subsection.5.2}{Change the Operator Configuration}{section.5}% 16
 \BOOKMARK [2][-]{subsection.5.3}{Deploy and Run}{section.5}% 17
+\BOOKMARK [1][-]{section.6}{Overview}{}% 18
+\BOOKMARK [1][-]{section.7}{Quickstart}{}% 19
+\BOOKMARK [2][-]{subsection.7.1}{GKE/PKS}{section.7}% 20
+\BOOKMARK [2][-]{subsection.7.2}{Openshift Container Platform}{section.7}% 21

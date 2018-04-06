@@ -2,7 +2,11 @@
 
 ## Overview
 
-There are currently **quickstart** scripts that seek to automate the deployment to popular Kube environments: * quickstart-for-gke.sh * quickstart-for-ocp.sh
+There are currently **quickstart** scripts that seek to automate the deployment to popular Kube environments:
+
+- [quickstart-for-gke.sh](../examples/quickstart-for-gke.sh) 
+
+- [quickstart-for-ocp.sh](../examples/quickstart-for-ocp.sh) 
 
 The **quickstart-for-gke** script will deploy the operator to a GKE Kube cluster.
 

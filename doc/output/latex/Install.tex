@@ -105,7 +105,7 @@
     \lhead[]{TABLE OF CONTENTS}
 }
 
-\lfoot[]{Crunchy Postgres Operator Installation Guide\\DRAFT}
+\lfoot[]{Crunchy Postgres Operator Installation and Quickstarts Guide\\v2.0}
 \cfoot[]{\ \\-\ \thepage\ -}
 \rfoot[]{Crunchy Data Solutions, Inc.\\\today}
 \pagestyle{fancy}
@@ -131,8 +131,8 @@
         \begin{center}
             {\large \ }\\[18ex]
             {\huge \bfseries Crunchy Postgres Operator}\\[1ex]
-            {\large Installation Guide}\\[12ex]
-            {\large DRAFT}\\[12ex]
+            {\large Installation and Quickstarts Guide}\\[12ex]
+            {\large v2.0}\\[12ex]
             \includegraphics[width=6in]{/crunchy-docdynamo-postgres-operator/doc/output/latex/logo}\\[12ex]
             {\large Crunchy Data Solutions, Inc.}\\[1ex]
             {\large \today}
@@ -448,6 +448,57 @@ Reasonable defaults are specified which allow users to typically run the operato
 \subsection{Deploy and Run}\label{/_custom_installation/_deploy_and_run}
 
 At this point, you can use the Basic Installation Deploy steps to deploy the operator and run the \textbf{pgo} client.
+% 'Overview' Section
+% ----------------------------------------------------------------------------------------------------------------------------------
+\section{Overview}\label{/_overview}
+
+There are currently \textbf{quickstart} scripts that seek to automate the deployment to popular Kube environments:
+
+\begin{itemize}
+    \item \href{../examples/quickstart-for-gke.sh}{quickstart-for-gke.sh} 
+    \item \href{../examples/quickstart-for-ocp.sh}{quickstart-for-ocp.sh} 
+\end{itemize}
+The \textbf{quickstart-for-gke} script will deploy the operator to a GKE Kube cluster.
+
+The \textbf{quickstart-for-ocp} script will deploy the operator to an Openshift Container Platform cluster.
+
+Both scripts assume you have a StorageClass defined for persistence.
+
+Pre-compiled versions of the Operator \textbf{pgo} client are provided for the x86\_64, Mac OSX, and Windows hosts.
+
+% 'Quickstart' Section
+% ----------------------------------------------------------------------------------------------------------------------------------
+\section{Quickstart}\label{/_quickstart}
+
+% 'Quickstart' Section, 'GKE/PKS' SubSection
+% ----------------------------------------------------------------------------------------------------------------------------------
+\subsection{GKE/PKS}\label{/_quickstart/_gke_pks}
+
+The \textbf{quickstart-for-gke.sh} script will allow users to set up the Postgres Operator quickly on GKE including PKS. This script is tested on GKE but can be modified for use with other Kubernetes environments as well.
+
+The script requires a few things in order to work:
+
+\begin{itemize}
+    \item wget utility installed 
+    \item kubectl utility installed 
+    \item StorageClass defined 
+\end{itemize}
+Executing the script will give you a default Operator deployment that assumes \textbf{dynamic} storage and a storage class named \textbf{standard}, things that GKE provides.
+
+The script performs the following:
+
+\begin{itemize}
+    \item downloads the Operator configuration files 
+    \item sets the \$HOME/.pgouser file to default settings 
+    \item deploys the Operator Deployment 
+    \item sets your .bashrc to include the Operator environment variables 
+    \item sets your \$HOME/.bash\_completion file to be the \textbf{pgo} bash\_completion file 
+\end{itemize}
+% 'Quickstart' Section, 'Openshift Container Platform' SubSection
+% ----------------------------------------------------------------------------------------------------------------------------------
+\subsection{Openshift Container Platform}\label{/_quickstart/_openshift_container_platform}
+
+A similar script for installing the operator on OCP is offered with similar features as the GKE script. This script is tested on OCP 3.7 with a StorageClass defined.
 
 % ----------------------------------------------------------------------------------------------------------------------------------
 % End document
