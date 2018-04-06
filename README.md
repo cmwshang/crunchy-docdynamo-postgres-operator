@@ -51,6 +51,8 @@ sudo rm -rf /postgres-operator
 sudo git clone https://github.com/CrunchyData/postgres-operator.git /postgres-operator
 ```
 
-If new adoc files have been added, then edit the manifest.xml file and add the name of the new file to the source-list section and as a render-source to the render sections as appropriate.
+If new asciidoc files have been added, then
+1. add the filename to the build-docdynamo-docs.sh - in the Usage section and ${NAME?} == "all" section, and
+2. edit the manifest.xml file - add the name of the new file to the source-list section and as a render-source to the render sections where you would like it to go (e.g. html and/or markdown).
 
 Then follow the instructions under the section **Building the Docs** above.
