@@ -13,8 +13,8 @@
         <variable key="project-logo-path">{[doc-path]}/resource/</variable>
         <variable key="logo">{[doc-path]}/output/latex/logo</variable>
 
-        <!-- Image path for embeddade images - trailing slash is required -->
-        <variable key="image-path">../image/</variable>
+        <!-- Image path for embeddade images -->
+        <variable key="image-path">../image</variable>
 
         <!-- HTML variables  -->
         <variable key="prepare-date" eval="y">
@@ -56,6 +56,10 @@
         </render>
 
         <render type="pdf" file="Install">
+        <!-- <render type="pdf" file="Commands">
+        <render type="pdf" file="Configuration">
+        <render type="pdf" file="Design">
+        <render type="pdf" file="Quickstarts"> -->
             <title1>{[project]}</title1>
             <title2>{[pdf-install-subtitle]}</title2>
             <title3>{[pdf-install-version]}</title3>
@@ -63,6 +67,10 @@
             <footer-center>\ \\-\ \thepage\ -</footer-center>
             <footer-right>{[organization]}\\\today</footer-right>
             <render-source key="install"/>
+            <!-- <render-source key="commands"/>
+            <render-source key="configuration"/>
+            <render-source key="design"/>
+            <render-source key="quickstarts"/> -->
         </render>
 
         <render type="markdown">

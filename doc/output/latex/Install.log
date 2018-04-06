@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2018.4.3)  5 APR 2018 17:17
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2018.4.3)  6 APR 2018 13:39
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -526,11 +526,11 @@ LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <24.88> not available
 (Font)              Font shape `OT1/phv/b/n' tried instead on input line 133.
 Package epstopdf Info: Source file: </crunchy-docdynamo-postgres-operator/doc/o
 utput/latex/logo.eps>
-(epstopdf)                    date: 2018-04-05 17:17:06
+(epstopdf)                    date: 2018-04-06 13:39:44
 (epstopdf)                    size: 293263 bytes
 (epstopdf)             Output file: </crunchy-docdynamo-postgres-operator/doc/o
 utput/latex/logo-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-04-05 17:17:07
+(epstopdf)                    date: 2018-04-06 13:39:45
 (epstopdf)                    size: 61541 bytes
 (epstopdf)             Command: <epstopdf --outfile=/crunchy-docdynamo-postgres
 -operator/doc/output/latex/logo-eps-converted-to.pdf /crunchy-docdynamo-postgre
@@ -634,7 +634,7 @@ urw/helvetic/uhvbo8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/helveti
 c/uhvr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvro8a.pf
 b>
 Output written on /crunchy-docdynamo-postgres-operator/doc/output/latex/Install
-.pdf (11 pages, 121776 bytes).
+.pdf (11 pages, 121779 bytes).
 PDF statistics:
  297 PDF objects out of 1000 (max. 8388607)
  273 compressed objects within 3 object streams

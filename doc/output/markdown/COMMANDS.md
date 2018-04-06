@@ -384,8 +384,9 @@ The load configuration file has the following YAML attributes:
 
 **Table 1. Load Configuration File Definitions**
 
-COImagePrefix | the pgo-load image prefix to use for the load job
+Attribute  | Description
 :--- | :---
+COImagePrefix | the pgo-load image prefix to use for the load job
 COImageTag | the pgo-load image tag to use for the load job
 DbDatabase | the database schema to use for loading the data
 DbUser | the database user to use for loading the data

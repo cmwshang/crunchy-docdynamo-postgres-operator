@@ -30,6 +30,7 @@ Vagrant.configure(2) do |config|
 
         echo 'Get Crunchy Postgres Operator' && date
         # git clone https://github.com/CrunchyData/postgres-operator.git /postgres-operator
+        # The following is only a temporary replacement from the above
         git clone https://github.com/cmwshang/postgres-operator.git /postgres-operator
 
         echo 'Build End' && date

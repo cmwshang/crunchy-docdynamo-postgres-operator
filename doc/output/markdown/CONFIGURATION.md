@@ -307,6 +307,7 @@ That example will create a backup and use the **offsitestorage** storage configu
 A simple mechanism for partial disaster recovery can be obtained by leveraging network storage, Kubernetes storage classes, and the storage configuration options within the Operator.
 
 For example, if you define a Kubernetes storage class that refers to a storage backend that is running within your disaster recovery site, and then use that storage class as a storage configuration for your backups, you essentially have moved your backup files automatically to your DR site thanks to network storage.
+>![Image](../image/Operator-DR-Storage.png?raw=true)
 
 ### **postgres-operator** Container Configuration
 

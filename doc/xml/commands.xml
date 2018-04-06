@@ -343,11 +343,15 @@ example:</p>
 <title label="Table 1. ">Load Configuration File Definitions</title>
 
 <table-header>
-<table-column align="left">COImagePrefix</table-column>
-<table-column align="left">  the pgo-load image prefix to use for the load job</table-column>
+<table-column align="left">Attribute </table-column>
+<table-column align="left"> Description</table-column>
 </table-header>
 
 <table-data>
+<table-row>
+<table-cell>COImagePrefix</table-cell>
+<table-cell>the pgo-load image prefix to use for the load job</table-cell>
+</table-row>
 <table-row>
 <table-cell>COImageTag</table-cell>
 <table-cell>the pgo-load image tag to use for the load job</table-cell>

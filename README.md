@@ -1,4 +1,4 @@
-# crunchy-docdynamo-postgres-operator-postgres-operator
+# crunchy-docdynamo-postgres-operator
 Documentation generation engine for Crunchy Data postgres-operator. Source code for the output documentation is adoc (asciidoc) files.
 
 ## Setting up the Example Environment

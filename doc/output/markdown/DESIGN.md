@@ -3,6 +3,8 @@
 ## Reference Architecture
 
 So, what does the Postgres Operator actually deploy when you create a cluster?
+>![Image](../image/OperatorReferenceDiagram.png?raw=true)
+
 
 On this diagram, objects with dashed lines are things that are optionally deployed as part of a Postgres Cluster by the Operator and objects with solid lines are the fundamental and required components.
 
@@ -78,7 +80,7 @@ You can always view the actual node your cluster pod is scheduled on by:
 ```
 kubectl get pod -o wide
 ```
-When you scale up a Cluster and add a replica, the scaling will take into account the use of "--node-name" If it sees that a cluster was created with a specific node name, then the replica Deployment will add an affinity rule to attempt to schedule the replica on a different node than the node the primary is schedule on. This gets you a simple for of High Availability so that your primary and replicas will not live on the same Kube node.
+When you scale up a Cluster and add a replica, the scaling will take into account the use of "--node-name". If it sees that a cluster was created with a specific node name, then the replica Deployment will add an affinity rule to attempt to schedule the replica on a different node than the node the primary is schedule on. This gets you a simple for of High Availability so that your primary and replicas will not live on the same Kube node.
 
 ## Debugging
 
