@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2018.4.3)  6 APR 2018 13:50
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2018.4.3)  6 APR 2018 13:59
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -526,11 +526,11 @@ LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <24.88> not available
 (Font)              Font shape `OT1/phv/b/n' tried instead on input line 133.
 Package epstopdf Info: Source file: </crunchy-docdynamo-postgres-operator/doc/o
 utput/latex/logo.eps>
-(epstopdf)                    date: 2018-04-06 13:50:48
+(epstopdf)                    date: 2018-04-06 13:59:30
 (epstopdf)                    size: 293263 bytes
 (epstopdf)             Output file: </crunchy-docdynamo-postgres-operator/doc/o
 utput/latex/logo-eps-converted-to.pdf>
-(epstopdf)                    date: 2018-04-06 13:50:49
+(epstopdf)                    date: 2018-04-06 13:59:31
 (epstopdf)                    size: 61541 bytes
 (epstopdf)             Command: <epstopdf --outfile=/crunchy-docdynamo-postgres
 -operator/doc/output/latex/logo-eps-converted-to.pdf /crunchy-docdynamo-postgre
@@ -600,7 +600,7 @@ Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 210.
 Here is how much of TeX's memory you used:
  9343 strings out of 495063
  140316 string characters out of 3182202
- 227474 words of memory out of 3000000
+ 227473 words of memory out of 3000000
  12399 multiletter control sequences out of 15000+200000
  23394 words of font info for 44 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
@@ -610,7 +610,7 @@ e/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/share/texlive/texmf-dist
 /fonts/type1/urw/helvetic/uhvr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1
 /urw/helvetic/uhvro8a.pfb>
 Output written on /crunchy-docdynamo-postgres-operator/doc/output/latex/Quickst
-arts.pdf (4 pages, 77598 bytes).
+arts.pdf (4 pages, 77760 bytes).
 PDF statistics:
  75 PDF objects out of 1000 (max. 8388607)
  62 compressed objects within 1 object stream
